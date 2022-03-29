@@ -1,0 +1,1221 @@
+import React, {useEffect, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {
+  FlatList,
+  ScrollView,
+  View,
+  Animated,
+  ActivityIndicator,
+  TouchableOpacity,
+  Picker,
+  Dimensions,
+} from 'react-native';
+import styles from './styles';
+import {
+  CardChannelGrid,
+  CardSlide,
+  CategoryList,
+  News43,
+  ListFacility,
+  PlaceholderLine,
+  Placeholder,
+  Button,
+  SafeAreaView,
+  ProductSpecGrid,
+  Text,
+  Header,
+  Image,
+  Icon,
+  Tag,
+  colors,
+  ListOptionSelected,
+  VenueSelectOption,
+} from '@components';
+// holiday - village;
+import IconFontisto from 'react-native-vector-icons/Fontisto';
+import moment from 'moment';
+import {enableExperimental} from '@utils';
+
+import axios from 'axios';
+import {BaseColor, BaseStyle, Images, useTheme} from '@config';
+import {useNavigation, useRoute} from '@react-navigation/core';
+import {ListTransactionExpand} from '../../components';
+import {TabView, SceneMap} from 'react-native-tab-view';
+import ModalProduct from './ModalProduct';
+
+import {useSelector} from 'react-redux';
+import getUser from '../../selectors/UserSelectors';
+
+import {FTypes} from '@data';
+import {color} from 'react-native-elements/dist/helpers';
+
+function BookingFacility({route}) {
+  // console.log('route in booking facility', route.params);
+  const [data, setData] = useState([]);
+  const [databookdate, setDatabookDate] = useState([]);
+  const [params, setParams] = useState(route?.params);
+  // console.log('params for venue code ?', params);
+  const [timedate, setTimeDate] = useState([]);
+  const navigation = useNavigation();
+  const [loading, setLoading] = useState(true);
+  const [time, setTime] = useState({});
+  const {t} = useTranslation();
+  const {colors} = useTheme();
+  const [selectedValue, setSelectedValue] = useState('');
+  const [IDTab, setIDTab] = useState('');
+  const [tabsDate, setTabDate] = useState([]);
+  const [days, setDays] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible_2, setModalVisible_2] = useState(false);
+
+  const [spinner, setSpinner] = useState(true);
+  const [spinnerHour, setSpinnerHours] = useState(true);
+
+  const users = useSelector(state => getUser(state));
+  const [email, setEmail] = useState(users.user);
+  const [dataTowerUser, setdataTowerUser] = useState([]);
+  const [arrDataTowerUser, setArrDataTowerUser] = useState([]);
+
+  const [venueChoosed, setVenueChoosed] = useState({dataVenue});
+  const [dataVenue, setDataVenue] = useState([]);
+  const [titlenull, setTitle] = useState(false);
+  const [dataBooked1, setDataBooked1] = useState([]);
+  const [dataBooked2, setDataBooked2] = useState([]);
+  const [dataBooked3, setDataBooked3] = useState([]);
+  const [dataBooked4, setDataBooked4] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get('http://34.87.121.155:2121/apiwebpbi/api/facility/book/time')
+      .then(time => {
+        console.log('time from server?', time.data);
+        setTime(time.data);
+      })
+      // .catch(error => console.error(error))
+      .catch(error => console.error(error.response.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const datatime = {
+    timeget: time.tanggal,
+    daily: time.jam,
+  };
+  // console.log('timeee', datatime);
+
+  const d = datatime.daily;
+  // console.log('daily', d);
+
+  const setBody = {
+    entity_cd: '01',
+    project_no: '01',
+    facility_cd: 'CA',
+    book_date: datatime.timeget,
+  };
+
+  // useEffect(() => {
+  //   axios
+  //     .get(
+  //       `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours?entity_cd=01&project_no=01&facility_cd=CA`,
+  //     )
+  //     .then(res => {
+  //       console.log('data date book', res.data[0]);
+  //       setData(res.data);
+  //       setDatabookDate(res.data[0]);
+  //       setSpinner(false);
+  //     })
+  //     .catch(error => console.error(error))
+  //     .finally(() => setLoading(false));
+  // }, []);
+
+  useEffect(() => {
+    axios
+      .get(
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_id?entity_cd=01&project_no=01&facility_cd=CA&book_date=2021-12-07&id=1`,
+      )
+      .then(data => {
+        console.log('timedate', data.data);
+        setTimeDate(data[0]);
+
+        setSpinner(false);
+      })
+      // .catch(error => console.error(error))
+      .catch(error => console.error(error.response.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // const fetchDataDays = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       'http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_id?entity_cd=01&project_no=01&facility_cd=CA&book_date=2021-12-08&id=2',
+  //     );
+  //     setDays(res.data);
+  //     console.log('dayss', res.data);
+  //   } catch (error) {
+  //     setErrors(error.ressponse.data);
+  //     alert(hasError.toString());
+  //   }
+  // };
+
+  useEffect(() => {
+    // fetchDataDays();
+  }, []);
+
+  const TABS = [
+    {
+      id: 1,
+      title: data[0]?.book_date,
+    },
+    {
+      id: 2,
+      title: data[1]?.book_date,
+    },
+    {
+      id: 3,
+      title: data[2]?.book_date,
+    },
+    {
+      id: 4,
+      title: data[3]?.book_date,
+    },
+  ];
+  const [tab, setTab] = useState(TABS[0]);
+
+  const tab1 = data.filter(x => x.id == '1');
+  const tab2 = data.filter(x => x.id == '2');
+  const tab3 = data.filter(x => x.id == '3');
+  const tab4 = data.filter(x => x.id == '4');
+
+  useEffect(() => {
+    const id = route?.params?.id;
+    console.log('id akan di foreach', route?.params);
+    if (id) {
+      TABS.forEach(tab => {
+        tab.id == id && setTab(tab);
+      });
+    }
+  }, [route?.params?.id]);
+  const obj = [{...data}];
+
+  // console.log('losdsa', obj);
+
+  const ItemView = ({item}) => {
+    return (
+      <View
+        style={{
+          marginVertical: 5,
+          paddingHorizontal: 10,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignContent: 'space-between',
+          borderRadius: 15,
+          borderColor: '#dbdbdb',
+          borderBottomWidth: 1,
+          padding: 10,
+        }}>
+        <Text bold>{item.slot_hours}</Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.primary,
+            padding: 15,
+            borderRadius: 15,
+          }}>
+          <Text whiteColor subheadline bold>
+            Booking
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  useEffect(() => {
+    // getTower();
+    // const getTower = () => {
+    const datas = {
+      email: email,
+      app: 'O',
+    };
+
+    // console.log('for  data daate', datas);
+
+    const config = {
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+        // token: "",
+      },
+    };
+    console.log(
+      'url api tower',
+      `http://34.87.121.155:2121/apiwebpbi/api/getData/mysql/${datas.email}/${datas.app}`,
+    );
+    axios
+      .get(
+        `http://34.87.121.155:2121/apiwebpbi/api/getData/mysql/${datas.email}/${datas.app}`,
+        {
+          config,
+        },
+      )
+      .then(res => {
+        const datas = res.data;
+        // console.log('tower entity projek', datas);
+        const arrDataTower = datas.Data;
+        console.log('tower entity arrDataTower', arrDataTower[0]);
+        setdataTowerUser(arrDataTower[0]);
+        // getDateBook(arrDataTower[0]);
+
+        // getBooked(arrDataTower[0], databookdate, '');
+        // arrDataTower.map(dat => {
+        //   if (dat) {
+        //     setdataTowerUser(dat);
+        //     getDateBook(dat);
+
+        //     getBooked(dat);
+        //   }
+        // });
+        setArrDataTowerUser(arrDataTower);
+
+        setTimeout(() => {
+          setSpinner(false);
+        }, 1000);
+      })
+      // .catch(error => console.error(error))
+      .catch(error => console.error(error.response.data))
+      .finally(() => setLoading(false));
+    // };
+  }, []);
+
+  useEffect(() => {
+    getDateBook(dataTowerUser);
+  }, [dataTowerUser]);
+
+  const getDateBook = async datas => {
+    // console.log('tes save entioty,', dataTowerUser);
+    const entity_cd = datas.entity_cd;
+    // console.log('next abis tower datebook', entity_cd);
+    const project_no = datas.project_no;
+    const obj_data = params;
+
+    await axios
+      .get(
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours?entity_cd=` +
+          entity_cd +
+          `&project_no=` +
+          project_no +
+          `&facility_cd=` +
+          obj_data.facility_cd,
+      )
+      .then(res => {
+        // console.log('data get date book', res.data[0]);
+        // console.log('datas nih dipake buat entity projek', datas);
+        setData(res.data);
+        setDatabookDate(res.data);
+        getdata();
+        getBooked(datas, res.data, '');
+        setSpinner(false);
+      })
+      // .catch(error => console.error(error))
+      .catch(error => console.error(error.response.data))
+      .finally(() => setLoading(false));
+  };
+
+  const getdata = async () => {
+    const entity_cd = dataTowerUser.entity_cd;
+    // console.log('next abis tower getdata', dataTowerUser);
+    const project_no = dataTowerUser.project_no;
+    const obj_data = params;
+    //ini bentuknya array, hany ambil yang array 0 aja, krn kayaknya sama semua deh facility_cd nya
+    // console.log('obj data', obj_data);
+    const params_api =
+      '?' +
+      'entity_cd=' +
+      entity_cd +
+      '&' +
+      'project_no=' +
+      project_no +
+      '&' +
+      'facility_cd=' +
+      obj_data.facility_cd;
+    // 'SB';
+    // console.log(
+    //   'params daata',
+    //   'http://34.87.121.155:2121/apiwebpbi/api/facility/book/venue' +
+    //     params_api,
+    // );
+    await axios
+      .get(
+        'http://34.87.121.155:2121/apiwebpbi/api/facility/book/venue' +
+          params_api,
+      )
+      .then(res => {
+        // console.log('ress facility book venue:', res.data);
+        // setData(res.data);
+        setDataVenue(res.data.data);
+        // console.log('datavenue', res.data.data);
+      })
+      .catch(error => console.error(error.response.data));
+  };
+
+  const entity_cd = dataTowerUser.entity_cd;
+  console.log('next user tower', entity_cd);
+  const project_no = dataTowerUser.project_no;
+  console.log('next user project', project_no);
+
+  const getBooked = async (datas, databookdates, venue_klik) => {
+    // console.log('option', venue_klik);
+    // const entity_cd = datas.entity_cd;
+    // console.log('next abis tower', datas);
+    // const project_no = datas.project_no;
+    // const obj_data = params;
+    // const databookdates = databookdate;
+    // console.log('data obj_data', obj_data);
+    // console.log('data book date atas', databookdates);
+
+    if (venue_klik == undefined || venue_klik == null || venue_klik == '') {
+      console.log('option if', venue_klik);
+      const entity_cd = datas.entity_cd;
+      console.log('next abis tower if', entity_cd);
+      const project_no = datas.project_no;
+      const obj_data = params;
+      // const databookdates = databookdate;
+      // console.log('data obj_data', obj_data);
+      console.log('data book date if', databookdates);
+
+      // alert('undefined');
+      const params_api =
+        '?' +
+        'entity_cd=' +
+        entity_cd +
+        '&' +
+        'project_no=' +
+        project_no +
+        '&' +
+        'facility_cd=' +
+        obj_data.facility_cd +
+        '&' +
+        'venue_cd=' +
+        obj_data.venue[0].venue_cd;
+      //  venue_klik;
+      // 'SB';
+
+      // console.log(
+      //   'params booked',
+      //   params_api + '&' + 'book_date=' + databookdates.book_date + '&id=1',
+      // );
+      // console.log(
+      //   'url params',
+      //   'http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue' +
+      //     params_api +
+      //     '&' +
+      //     'book_date=' +
+      //     // '2021-12-15' +
+      //     databookdates[2].book_date +
+      //     '&id=1',
+      // );
+      let endpoints = [
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[0].book_date +
+          // '2021-12-15' +
+          `&id=1`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[1].book_date +
+          // '2021-12-15' +
+          `&id=2`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[2].book_date +
+          // '2021-12-15' +
+          `&id=3`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[3].book_date + // '2021-12-15' + // data[3]?.book_date +
+          `&id=4`,
+      ];
+      axios
+        .all(endpoints.map(endpoint => axios.get(endpoint)))
+        .then(
+          axios.spread(
+            (
+              {data: dataBooked1},
+              {data: dataBooked2},
+              {data: dataBooked3},
+              {data: dataBooked4},
+            ) => {
+              console.log('res1: ', dataBooked1);
+              console.log('res2: ', dataBooked2);
+              console.log('res3: ', dataBooked3);
+              console.log('res4: ', dataBooked4);
+
+              setDataBooked1(dataBooked1);
+              setDataBooked2(dataBooked2);
+              setDataBooked3(dataBooked3);
+              setDataBooked4(dataBooked4);
+            },
+          ),
+        )
+        .catch(error => console.error(error.response.data))
+        .finally(
+          () => setLoading(false),
+          // setSpinnerHours(false),
+          // setSpinner(false),
+        );
+    } else {
+      console.log('option else', venue_klik);
+      const entity_cd = datas.entity_cd;
+      console.log('next abis tower else', entity_cd);
+      const project_no = datas.project_no;
+      const obj_data = params;
+      // const databookdates = databookdate;
+      // console.log('data obj_data', obj_data);
+      console.log('data book date else', databookdates);
+
+      const params_api =
+        '?' +
+        'entity_cd=' +
+        entity_cd +
+        '&' +
+        'project_no=' +
+        project_no +
+        '&' +
+        'facility_cd=' +
+        obj_data.facility_cd +
+        '&' +
+        'venue_cd=' +
+        // obj_data.venue[0].venue_cd;
+        venue_klik;
+      // 'SB';
+
+      // console.log('params booked', params_api);
+      // console.log(
+      //   'url params',
+      //   'http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue' +
+      //     params_api +
+      //     '&' +
+      //     'book_date=' +
+      //     data[0].book_date +
+      //     '&id=1',
+      // );
+      let endpoints = [
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[0].book_date +
+          // '2021-12-15' +
+          `&id=1`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[1].book_date +
+          // '2021-12-15' +
+          `&id=2`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[2].book_date +
+          // '2021-12-15' +
+          `&id=3`,
+        `http://34.87.121.155:2121/apiwebpbi/api/facility/book/hours_venue` +
+          params_api +
+          '&' +
+          'book_date=' +
+          databookdates[3].book_date + // '2021-12-15' + // data[3]?.book_date +
+          `&id=4`,
+      ];
+      axios
+        .all(endpoints.map(endpoint => axios.get(endpoint)))
+        .then(
+          axios.spread(
+            (
+              {data: dataBooked1},
+              {data: dataBooked2},
+              {data: dataBooked3},
+              {data: dataBooked4},
+            ) => {
+              console.log('res1 created if: ', dataBooked1);
+              console.log('res2 created: ', dataBooked2);
+              console.log('res3 created: ', dataBooked3);
+              console.log('res4 created: ', dataBooked4);
+
+              setDataBooked1(dataBooked1);
+              setDataBooked2(dataBooked2);
+              setDataBooked3(dataBooked3);
+              setDataBooked4(dataBooked4);
+            },
+          ),
+        )
+        .catch(error => console.error(error.response.data))
+        .finally(
+          () => setLoading(false),
+          // setSpinnerHours(false),
+          // setSpinner(false),
+        );
+
+      // .finally(() => setLoading(false));
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setSpinnerHours(false);
+      getBooked();
+    }, 5000);
+  }, []);
+
+  const onChangeOption = option => {
+    console.log('option klik', option.venue_cd);
+    const venue_klik = option.venue_cd;
+    setVenueChoosed(option);
+    setTitle(true);
+    getBooked(dataTowerUser, databookdate, venue_klik);
+    setTimeout(() => {
+      setModalVisible_2(false);
+    }, 200);
+  };
+
+  const onBookingPress = (items, jam_booking) => {
+    console.log('items for booking detail', items);
+    console.log('jam booking', jam_booking);
+    const item = {
+      items: items,
+      jam_booking: jam_booking,
+    };
+    console.log('items all', item);
+    // setModalVisible(true);
+    navigation.navigate('BookingDetail', item);
+  };
+
+  return (
+    <SafeAreaView
+      style={[BaseStyle.safeAreaView, {flex: 1}]}
+      edges={['right', 'top', 'left']}>
+      <Header
+        title={t('Choose Schedule')}
+        renderLeft={() => {
+          return (
+            <Icon
+              name="angle-left"
+              size={20}
+              color={colors.primary}
+              enableRTL={true}
+            />
+          );
+        }}
+        onPressLeft={() => {
+          navigation.goBack();
+        }}
+      />
+      <ScrollView contentContainerStyle={styles.paddingSrollView}>
+        {/* <View
+          style={{
+            backgroundColor: colors.primary,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignContent: 'center',
+            borderRadius: 15,
+            padding: 10,
+          }}>
+          <Text headline whiteColor>
+            Tennis
+          </Text>
+          <Text>{datatime.timeget}</Text>
+        </View> */}
+        <View style={{marginTop: 20, paddingHorizontal: 10}}>
+          <Text subheadline bold>
+            Choose Venue
+          </Text>
+          <ListOptionSelected
+            style={{marginTop: 10}}
+            textLeft={
+              titlenull == false
+                ? params.venue[0].venue_name
+                : venueChoosed?.venue_name
+            }
+            // textRight={venueChoosed?.venue_name}
+            onPress={() => setModalVisible_2(true)}
+          />
+
+          <VenueSelectOption
+            isVisible={modalVisible_2}
+            options={dataVenue}
+            onChange={onChangeOption}
+            venueChoosed={venueChoosed}
+            onSwipeComplete={() => setModalVisible_2(false)}
+          />
+        </View>
+
+        <View style={{marginTop: 30, paddingHorizontal: 10}}>
+          <Text subheadline bold>
+            Today
+          </Text>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignContent: 'space-between',
+            borderRadius: 15,
+            borderColor: colors.dark,
+            borderBottomWidth: 1,
+            padding: 10,
+            marginBottom: 15,
+            marginTop: 10,
+          }}>
+          {/* <Text headline whiteColor>
+            Tennis
+          </Text> */}
+          <Text>{datatime.timeget}</Text>
+          {/* <Text>{datatime.daily}</Text> */}
+
+          <Icon
+            name="calendar-week"
+            size={20}
+            color={colors.primary}
+            enableRTL={true}
+          />
+        </View>
+
+        <ScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}>
+          <View style={{marginVertical: 20}}>
+            {/* <Text title2>Ticket</Text>
+          <Text headline style={{fontWeight: 'normal'}}>
+            Book Screen
+          </Text> */}
+            {spinner ? (
+              <View>
+                {/* <Spinner visible={this.state.spinner} /> */}
+                <Placeholder style={{marginVertical: 4, paddingHorizontal: 10}}>
+                  <PlaceholderLine width={100} noMargin style={{height: 40}} />
+                </Placeholder>
+              </View>
+            ) : (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                {TABS.map((item, index) => (
+                  <View key={index} style={{flex: 1, paddingHorizontal: 5}}>
+                    <Tag
+                      outline
+                      style={{
+                        height: 60,
+                        width: 60,
+                        marginBottom: 20,
+
+                        flexDirection: 'column',
+                        backgroundColor:
+                          tab.id == item.id
+                            ? colors.primary
+                            : colors.background,
+                      }}
+                      onPress={() => {
+                        enableExperimental();
+                        setTab(item);
+                      }}>
+                      <View
+                        style={{
+                          flexGrow: 1,
+                          flexDirection: 'row',
+                        }}>
+                        <Text
+                          bold
+                          body1={tab.id != item.id}
+                          light={tab.id != item.id}
+                          whiteColor={tab.id == item.id}
+                          style={{textAlign: 'center'}}>
+                          {moment(item.title)
+                            .format('DD MMM')
+                            .replace(' ', '\n')}
+                        </Text>
+                      </View>
+                    </Tag>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* ---coba ya */}
+            {spinnerHour ? (
+              <View>
+                <Placeholder style={{marginVertical: 4, paddingHorizontal: 10}}>
+                  <PlaceholderLine width={100} noMargin style={{height: 40}} />
+                </Placeholder>
+              </View>
+            ) : (
+              <View
+                style={{
+                  flex: 1,
+                  paddingHorizontal: 20,
+                }}>
+                {tab.id == 1 && dataBooked1.slot_hours != ''
+                  ? dataBooked1.slot_hours.map &&
+                    dataBooked1.slot_hours.map(
+                      (items, indexs) => (
+                        console.log('databooked slot hour', items.databook),
+                        (
+                          <View
+                            key={indexs}
+                            style={{
+                              paddingVertical: 15,
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignContent: 'space-between',
+                              borderRadius: 15,
+                              borderColor: '#dbdbdb',
+                              borderBottomWidth: 1,
+                            }}>
+                            <Text key={items.id} bold>
+                              {items.jam}
+                            </Text>
+                            {/* <Text key={items.id} bold>
+                        {time.jam > items.jam
+                          ? 'lebih dari jam'
+                          : 'kurang dari jam'}
+                      </Text> */}
+
+                            <View style={{flexDirection: 'column'}}>
+                              {items.databook != ''
+                                ? items.databook.map((itemdatabook, keys) => (
+                                    <View key={keys}>
+                                      <Text>
+                                        {itemdatabook.remarks} -{' '}
+                                        {itemdatabook.venue_name}
+                                      </Text>
+                                      <Text>{itemdatabook.reservation_no}</Text>
+
+                                      {/* minta tambahin kolom venue_name   */}
+                                    </View>
+                                  ))
+                                : null}
+                              {items.datapartner != ''
+                                ? items.datapartner.map(
+                                    (itemdatapartner, keys) => (
+                                      <View key={keys}>
+                                        <Text>
+                                          {itemdatapartner.staff_first_name}{' '}
+                                          {itemdatapartner.staff_last_name}
+                                        </Text>
+                                        <Text>
+                                          as a {itemdatapartner.position}
+                                        </Text>
+                                      </View>
+                                    ),
+                                  )
+                                : null}
+                            </View>
+
+                            <TouchableOpacity
+                              disabled={
+                                items.status_avail != 'Y' ||
+                                time.jam > items.jam
+                                  ? true
+                                  : false
+                              }
+                              onPress={() =>
+                                onBookingPress(dataBooked1, items.jam)
+                              }
+                              style={{
+                                backgroundColor:
+                                  items.status_avail == 'Y' &&
+                                  time.jam < items.jam
+                                    ? colors.primary
+                                    : items.databook[0].status == 'O'
+                                    ? BaseColor.orangeColor
+                                    : BaseColor.redColor,
+                                padding: 15,
+                                borderRadius: 15,
+                                justifyContent: 'center',
+                              }}>
+                              <Text whiteColor subheadline bold>
+                                Booking
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        )
+                      ),
+                    )
+                  : tab.id == 1 && (
+                      <View
+                        style={{
+                          flex: 1,
+                          marginTop: '50%',
+                        }}>
+                        <IconFontisto
+                          name="holiday-village"
+                          size={40}
+                          color={colors.primary}
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                          }}></IconFontisto>
+                        <Text
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                            fontSize: 16,
+                            marginTop: 10,
+                          }}>
+                          Sorry! The Facility is closed.
+                        </Text>
+                      </View>
+                    )}
+              </View>
+            )}
+
+            {spinnerHour ? (
+              <View>
+                {/* <Spinner visible={this.state.spinner} /> */}
+                <Placeholder style={{marginVertical: 4, paddingHorizontal: 10}}>
+                  <PlaceholderLine width={100} noMargin style={{height: 40}} />
+                </Placeholder>
+              </View>
+            ) : (
+              <View style={{flex: 1, paddingHorizontal: 20}}>
+                {tab.id == 2 && dataBooked2?.slot_hours != ''
+                  ? dataBooked2.slot_hours.map &&
+                    dataBooked2.slot_hours.map((items, indexs) => (
+                      <View
+                        key={indexs}
+                        style={{
+                          paddingVertical: 15,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignContent: 'space-between',
+                          borderRadius: 15,
+                          borderColor: '#dbdbdb',
+                          borderBottomWidth: 1,
+                        }}>
+                        <Text key={items.id} bold>
+                          {items.jam}
+                        </Text>
+
+                        <View style={{flexDirection: 'column'}}>
+                          {items.databook != ''
+                            ? items.databook.map((itemdatabook, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatabook.remarks} -{' '}
+                                    {itemdatabook.venue_name}
+                                  </Text>
+                                  {/* <Text>{itemdatabook.name}</Text> */}
+                                  <Text>{itemdatabook.reservation_no}</Text>
+                                  <Text>
+                                    {moment(
+                                      itemdatabook.reservation_date,
+                                    ).format('DD MMM YYYY hh:mm:ss')}
+                                  </Text>
+                                  {/* minta tambahin kolom venue_name   */}
+                                </View>
+                              ))
+                            : null}
+                          {items.datapartner != ''
+                            ? items.datapartner.map((itemdatapartner, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatapartner.staff_first_name}{' '}
+                                    {itemdatapartner.staff_last_name}
+                                  </Text>
+                                  <Text>as a {itemdatapartner.position}</Text>
+                                </View>
+                              ))
+                            : null}
+                        </View>
+
+                        <TouchableOpacity
+                          disabled={items.status_avail != 'Y' ? true : false}
+                          onPress={() => onBookingPress(dataBooked2, items.jam)}
+                          style={{
+                            backgroundColor:
+                              items.status_avail == 'Y'
+                                ? colors.primary
+                                : items.databook[0].status == 'O'
+                                ? BaseColor.orangeColor
+                                : BaseColor.redColor,
+                            padding: 15,
+                            borderRadius: 15,
+                            justifyContent: 'center',
+                          }}>
+                          <Text whiteColor subheadline bold>
+                            Booking
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  : tab.id == 2 && (
+                      <View
+                        style={{
+                          flex: 1,
+                          marginTop: '50%',
+                        }}>
+                        <IconFontisto
+                          name="holiday-village"
+                          size={40}
+                          color={colors.primary}
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                          }}></IconFontisto>
+                        <Text
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                            fontSize: 16,
+                            marginTop: 10,
+                          }}>
+                          Sorry! The Facility is closed.
+                        </Text>
+                      </View>
+                    )}
+              </View>
+            )}
+
+            {spinnerHour ? (
+              <View>
+                {/* <Spinner visible={this.state.spinner} /> */}
+                <Placeholder style={{marginVertical: 4, paddingHorizontal: 10}}>
+                  <PlaceholderLine width={100} noMargin style={{height: 40}} />
+                </Placeholder>
+              </View>
+            ) : (
+              <View style={{flex: 1, paddingHorizontal: 20}}>
+                {tab.id == 3 && dataBooked3?.slot_hours != ''
+                  ? dataBooked3.slot_hours.map &&
+                    dataBooked3.slot_hours.map((items, indexs) => (
+                      <View
+                        key={indexs}
+                        style={{
+                          paddingVertical: 15,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignContent: 'space-between',
+                          borderRadius: 15,
+                          borderColor: '#dbdbdb',
+                          borderBottomWidth: 1,
+                        }}>
+                        <Text key={items.id} bold>
+                          {items.jam}
+                        </Text>
+
+                        <View style={{flexDirection: 'column'}}>
+                          {items.databook != ''
+                            ? items.databook.map((itemdatabook, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatabook.remarks} -{' '}
+                                    {itemdatabook.venue_name}
+                                  </Text>
+                                  {/* <Text>{itemdatabook.name}</Text> */}
+                                  <Text>{itemdatabook.reservation_no}</Text>
+
+                                  {/* minta tambahin kolom venue_name   */}
+                                </View>
+                              ))
+                            : null}
+                          {items.datapartner != ''
+                            ? items.datapartner.map((itemdatapartner, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatapartner.staff_first_name}{' '}
+                                    {itemdatapartner.staff_last_name}
+                                  </Text>
+                                  <Text>as a {itemdatapartner.position}</Text>
+                                </View>
+                              ))
+                            : null}
+                        </View>
+
+                        <TouchableOpacity
+                          disabled={items.status_avail != 'Y' ? true : false}
+                          onPress={() => onBookingPress(dataBooked3, items.jam)}
+                          style={{
+                            backgroundColor:
+                              items.status_avail == 'Y'
+                                ? colors.primary
+                                : items.databook[0].status == 'O'
+                                ? BaseColor.orangeColor
+                                : BaseColor.redColor,
+                            padding: 15,
+                            borderRadius: 15,
+                            justifyContent: 'center',
+                          }}>
+                          <Text whiteColor subheadline bold>
+                            Booking
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  : tab.id == 3 && (
+                      <View
+                        style={{
+                          flex: 1,
+                          marginTop: '50%',
+                        }}>
+                        <IconFontisto
+                          name="holiday-village"
+                          size={40}
+                          color={colors.primary}
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                          }}></IconFontisto>
+                        <Text
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                            fontSize: 16,
+                            marginTop: 10,
+                          }}>
+                          Sorry! The Facility is closed.
+                        </Text>
+                      </View>
+                    )}
+              </View>
+            )}
+
+            {spinnerHour ? (
+              <View>
+                {/* <Spinner visible={this.state.spinner} /> */}
+                <Placeholder style={{marginVertical: 4, paddingHorizontal: 10}}>
+                  <PlaceholderLine width={100} noMargin style={{height: 40}} />
+                </Placeholder>
+              </View>
+            ) : (
+              <View style={{flex: 1, paddingHorizontal: 20}}>
+                {tab.id == 4 && dataBooked4?.slot_hours != ''
+                  ? dataBooked4.slot_hours.map &&
+                    dataBooked4.slot_hours.map((items, indexs) => (
+                      <View
+                        key={indexs}
+                        style={{
+                          paddingVertical: 15,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignContent: 'space-between',
+                          borderRadius: 15,
+                          borderColor: '#dbdbdb',
+                          borderBottomWidth: 1,
+                        }}>
+                        <Text key={items.id} bold>
+                          {items.jam}
+                        </Text>
+
+                        <View style={{flexDirection: 'column'}}>
+                          {items.databook != ''
+                            ? items.databook.map((itemdatabook, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatabook.remarks} -{' '}
+                                    {itemdatabook.venue_name}
+                                  </Text>
+                                  {/* <Text>{itemdatabook.name}</Text> */}
+                                  <Text>{itemdatabook.reservation_no}</Text>
+
+                                  {/* minta tambahin kolom venue_name   */}
+                                </View>
+                              ))
+                            : null}
+                          {items.datapartner != ''
+                            ? items.datapartner.map((itemdatapartner, keys) => (
+                                <View key={keys}>
+                                  <Text>
+                                    {itemdatapartner.staff_first_name}{' '}
+                                    {itemdatapartner.staff_last_name}
+                                  </Text>
+                                  <Text>as a {itemdatapartner.position}</Text>
+                                </View>
+                              ))
+                            : null}
+                        </View>
+
+                        <TouchableOpacity
+                          disabled={items.status_avail != 'Y' ? true : false}
+                          onPress={() => onBookingPress(dataBooked4, items.jam)}
+                          style={{
+                            backgroundColor:
+                              items.status_avail == 'Y'
+                                ? colors.primary
+                                : items.databook[0].status == 'O'
+                                ? BaseColor.orangeColor
+                                : BaseColor.redColor,
+                            padding: 15,
+                            borderRadius: 15,
+                            justifyContent: 'center',
+                          }}>
+                          <Text whiteColor subheadline bold>
+                            Booking
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  : tab.id == 4 && (
+                      <View
+                        style={{
+                          flex: 1,
+                          marginTop: '50%',
+                        }}>
+                        <IconFontisto
+                          name="holiday-village"
+                          size={40}
+                          color={colors.primary}
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                          }}></IconFontisto>
+                        <Text
+                          style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                            fontSize: 16,
+                            marginTop: 10,
+                          }}>
+                          Sorry! The Facility is closed.
+                        </Text>
+                      </View>
+                    )}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </ScrollView>
+      {/* <ModalProduct
+        // colorChoosedInit={colorChoosed}
+        // sizeChoosedInit={sizeChoosed}
+        // item={productData}
+        isVisible={modalVisible}
+        onSwipeComplete={() => setModalVisible(false)}
+        onApply={() => {
+          setModalVisible(false);
+          navigation.navigate('BookingDetail');
+        }}
+      /> */}
+    </SafeAreaView>
+  );
+}
+
+export default BookingFacility;
